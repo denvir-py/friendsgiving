@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+const { useState, useEffect } = React;
+const { Plus, Trash2, RefreshCw } = lucide;
 
-// Firebase configuration - REPLACE THESE WITH YOUR OWN VALUES
+// Firebase configuration
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCu8EOp79LuCxs4DGVMQC85wztiT6DkEQc",
   authDomain: "friendsgiving-a25e9.firebaseapp.com",
@@ -9,10 +9,11 @@ const FIREBASE_CONFIG = {
   projectId: "friendsgiving-a25e9",
   storageBucket: "friendsgiving-a25e9.firebasestorage.app",
   messagingSenderId: "984699004191",
-  appId: "1:984699004191:web:392e1f6c8f17d6c25f3c2a"
+  appId: "1:984699004191:web:392e1f6c8f17d6c25f3c2a",
+  measurementId: "G-QLXV8XBGQN"
 };
 
-export default function FriendsgivingSignup() {
+function FriendsgivingSignup() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ category: 'Side Dish', item: '' });
   const [loading, setLoading] = useState(true);
@@ -75,7 +76,7 @@ export default function FriendsgivingSignup() {
             setLoading(false);
           });
         } catch (err) {
-          setError('Failed to connect to Firebase. Please check your configuration.');
+          setError('Failed to connect to Firebase: ' + err.message);
           setLoading(false);
         }
       }
@@ -139,102 +140,145 @@ export default function FriendsgivingSignup() {
   }, {});
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
-        <div className="text-orange-700 text-xl">Loading sign-up sheet...</div>
-      </div>
-    );
+    return React.createElement('div', {
+      className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center'
+    }, React.createElement('div', {
+      className: 'text-orange-700 text-xl'
+    }, 'Loading sign-up sheet...'));
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-8">
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-md">
-          <h2 className="text-red-600 font-bold text-xl mb-2">Connection Error</h2>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <p className="text-sm text-gray-600">Make sure you've added your Firebase configuration at the top of the code.</p>
-        </div>
-      </div>
-    );
+    return React.createElement('div', {
+      className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-8'
+    }, React.createElement('div', {
+      className: 'bg-white rounded-lg shadow-lg p-6 max-w-md'
+    }, [
+      React.createElement('h2', { 
+        key: 'title',
+        className: 'text-red-600 font-bold text-xl mb-2' 
+      }, 'Connection Error'),
+      React.createElement('p', { 
+        key: 'msg',
+        className: 'text-gray-700 mb-4' 
+      }, error),
+      React.createElement('p', { 
+        key: 'help',
+        className: 'text-sm text-gray-600' 
+      }, 'Check the browser console for details.')
+    ]));
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-orange-900 mb-2">🦃 Friendsgiving Sign-Up</h1>
-          <p className="text-orange-700">Claim a dish to bring to our feast!</p>
-          <p className="text-sm text-orange-600 mt-2">
-            ✨ Updates automatically in real-time for everyone
-          </p>
-        </div>
-
-        {categories.map(category => {
-          const categoryItems = groupedItems[category] || [];
-          if (categoryItems.length === 0) return null;
-          
-          return (
-            <div key={category} className="mb-6">
-              <h2 className="text-xl font-semibold text-orange-800 mb-3 border-b-2 border-orange-300 pb-1">
-                {category}
-              </h2>
-              <div className="space-y-2">
-                {categoryItems.map(item => (
-                  <div key={item.id} className="bg-white rounded-lg shadow p-4 flex items-center gap-4">
-                    <div className="flex-1 font-medium text-gray-800">
-                      {item.item}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={item.claimedBy}
-                      onChange={(e) => handleClaimChange(item.id, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    <button
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="text-red-500 hover:text-red-700 p-2"
-                      title="Delete item"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Add New Item</h3>
-          <div className="flex gap-3">
-            <select
-              value={newItem.category}
-              onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Item name"
-              value={newItem.item}
-              onChange={(e) => setNewItem({ ...newItem, item: e.target.value })}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddItem()}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <button
-              onClick={handleAddItem}
-              className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 flex items-center gap-2"
-            >
-              <Plus size={18} />
-              Add
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return React.createElement('div', {
+    className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8'
+  }, React.createElement('div', {
+    className: 'max-w-4xl mx-auto'
+  }, [
+    // Header
+    React.createElement('div', {
+      key: 'header',
+      className: 'text-center mb-8'
+    }, [
+      React.createElement('h1', {
+        key: 'h1',
+        className: 'text-4xl font-bold text-orange-900 mb-2'
+      }, '🦃 Friendsgiving Sign-Up'),
+      React.createElement('p', {
+        key: 'p1',
+        className: 'text-orange-700'
+      }, 'Claim a dish to bring to our feast!'),
+      React.createElement('p', {
+        key: 'p2',
+        className: 'text-sm text-orange-600 mt-2'
+      }, '✨ Updates automatically in real-time for everyone')
+    ]),
+    
+    // Categories
+    ...categories.map(category => {
+      const categoryItems = groupedItems[category] || [];
+      if (categoryItems.length === 0) return null;
+      
+      return React.createElement('div', {
+        key: category,
+        className: 'mb-6'
+      }, [
+        React.createElement('h2', {
+          key: 'cat-title',
+          className: 'text-xl font-semibold text-orange-800 mb-3 border-b-2 border-orange-300 pb-1'
+        }, category),
+        React.createElement('div', {
+          key: 'cat-items',
+          className: 'space-y-2'
+        }, categoryItems.map(item => 
+          React.createElement('div', {
+            key: item.id,
+            className: 'bg-white rounded-lg shadow p-4 flex items-center gap-4'
+          }, [
+            React.createElement('div', {
+              key: 'name',
+              className: 'flex-1 font-medium text-gray-800'
+            }, item.item),
+            React.createElement('input', {
+              key: 'input',
+              type: 'text',
+              placeholder: 'Your name',
+              value: item.claimedBy,
+              onChange: (e) => handleClaimChange(item.id, e.target.value),
+              className: 'flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+            }),
+            React.createElement('button', {
+              key: 'delete',
+              onClick: () => handleDeleteItem(item.id),
+              className: 'text-red-500 hover:text-red-700 p-2',
+              title: 'Delete item'
+            }, React.createElement(Trash2, { size: 18 }))
+          ])
+        ))
+      ]);
+    }).filter(Boolean),
+    
+    // Add new item
+    React.createElement('div', {
+      key: 'add-section',
+      className: 'bg-white rounded-lg shadow p-6 mt-8'
+    }, [
+      React.createElement('h3', {
+        key: 'add-title',
+        className: 'text-lg font-semibold text-gray-800 mb-4'
+      }, 'Add New Item'),
+      React.createElement('div', {
+        key: 'add-form',
+        className: 'flex gap-3'
+      }, [
+        React.createElement('select', {
+          key: 'select',
+          value: newItem.category,
+          onChange: (e) => setNewItem({ ...newItem, category: e.target.value }),
+          className: 'px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+        }, categories.map(cat => 
+          React.createElement('option', { key: cat, value: cat }, cat)
+        )),
+        React.createElement('input', {
+          key: 'input',
+          type: 'text',
+          placeholder: 'Item name',
+          value: newItem.item,
+          onChange: (e) => setNewItem({ ...newItem, item: e.target.value }),
+          onKeyPress: (e) => e.key === 'Enter' && handleAddItem(),
+          className: 'flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+        }),
+        React.createElement('button', {
+          key: 'button',
+          onClick: handleAddItem,
+          className: 'bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 flex items-center gap-2'
+        }, [
+          React.createElement(Plus, { key: 'icon', size: 18 }),
+          'Add'
+        ])
+      ])
+    ])
+  ]));
 }
+
+// Render the app
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(FriendsgivingSignup));

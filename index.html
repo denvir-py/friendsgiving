@@ -6,11 +6,200 @@
     <title>Friendsgiving Sign-Up</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div id="root"></div>
-    <script src="app.js"></script>
+    
+    <script>
+        (function() {
+            const { useState, useEffect } = React;
+            const h = React.createElement;
+
+            // Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyCu8EOp79LuCxs4DGVMQC85wztiT6DkEQc",
+                authDomain: "friendsgiving-a25e9.firebaseapp.com",
+                databaseURL: "https://friendsgiving-a25e9-default-rtdb.firebaseio.com",
+                projectId: "friendsgiving-a25e9",
+                storageBucket: "friendsgiving-a25e9.firebasestorage.app",
+                messagingSenderId: "984699004191",
+                appId: "1:984699004191:web:392e1f6c8f17d6c25f3c2a",
+                measurementId: "G-QLXV8XBGQN"
+            };
+
+            // Initialize Firebase
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const database = firebase.database();
+
+            function FriendsgivingSignup() {
+                const [items, setItems] = useState([]);
+                const [newItem, setNewItem] = useState({ category: 'Side Dish', item: '' });
+                const [loading, setLoading] = useState(true);
+                const [error, setError] = useState(null);
+
+                const categories = ['Main Dish', 'Side Dish', 'Salad', 'Dessert', 'Drinks', 'Other'];
+
+                const defaultItems = [
+                    { id: 1, category: 'Main Dish', item: 'Turkey', claimedBy: '' },
+                    { id: 2, category: 'Main Dish', item: 'Ham', claimedBy: '' },
+                    { id: 3, category: 'Side Dish', item: 'Mashed Potatoes', claimedBy: '' },
+                    { id: 4, category: 'Side Dish', item: 'Stuffing', claimedBy: '' },
+                    { id: 5, category: 'Side Dish', item: 'Green Bean Casserole', claimedBy: '' },
+                    { id: 6, category: 'Side Dish', item: 'Cranberry Sauce', claimedBy: '' },
+                    { id: 7, category: 'Side Dish', item: 'Mac and Cheese', claimedBy: '' },
+                    { id: 8, category: 'Salad', item: 'Caesar Salad', claimedBy: '' },
+                    { id: 9, category: 'Dessert', item: 'Pumpkin Pie', claimedBy: '' },
+                    { id: 10, category: 'Dessert', item: 'Apple Pie', claimedBy: '' },
+                    { id: 11, category: 'Dessert', item: 'Pecan Pie', claimedBy: '' },
+                    { id: 12, category: 'Drinks', item: 'Wine (Red)', claimedBy: '' },
+                    { id: 13, category: 'Drinks', item: 'Wine (White)', claimedBy: '' },
+                    { id: 14, category: 'Drinks', item: 'Sparkling Cider', claimedBy: '' },
+                ];
+
+                useEffect(() => {
+                    const itemsRef = database.ref('friendsgiving-items');
+                    
+                    itemsRef.on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setItems(data);
+                        } else {
+                            itemsRef.set(defaultItems);
+                            setItems(defaultItems);
+                        }
+                        setLoading(false);
+                    }, (err) => {
+                        console.error('Firebase error:', err);
+                        setError('Failed to connect to Firebase: ' + err.message);
+                        setLoading(false);
+                    });
+
+                    return () => itemsRef.off();
+                }, []);
+
+                const handleClaimChange = (id, name) => {
+                    const updatedItems = items.map(item => 
+                        item.id === id ? { ...item, claimedBy: name } : item
+                    );
+                    database.ref('friendsgiving-items').set(updatedItems);
+                };
+
+                const handleAddItem = () => {
+                    if (!newItem.item.trim()) return;
+                    
+                    const updatedItems = [...items, { 
+                        id: Date.now(), 
+                        category: newItem.category, 
+                        item: newItem.item, 
+                        claimedBy: '' 
+                    }];
+                    
+                    database.ref('friendsgiving-items').set(updatedItems);
+                    setNewItem({ category: 'Side Dish', item: '' });
+                };
+
+                const handleDeleteItem = (id) => {
+                    const updatedItems = items.filter(item => item.id !== id);
+                    database.ref('friendsgiving-items').set(updatedItems);
+                };
+
+                const groupedItems = items.reduce((acc, item) => {
+                    if (!acc[item.category]) acc[item.category] = [];
+                    acc[item.category].push(item);
+                    return acc;
+                }, {});
+
+                if (loading) {
+                    return h('div', {
+                        className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center'
+                    }, h('div', { className: 'text-orange-700 text-xl' }, 'Loading sign-up sheet...'));
+                }
+
+                if (error) {
+                    return h('div', {
+                        className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-8'
+                    }, h('div', { className: 'bg-white rounded-lg shadow-lg p-6 max-w-md' }, [
+                        h('h2', { key: 'title', className: 'text-red-600 font-bold text-xl mb-2' }, 'Connection Error'),
+                        h('p', { key: 'msg', className: 'text-gray-700 mb-4' }, error),
+                        h('p', { key: 'help', className: 'text-sm text-gray-600' }, 'Make sure Firebase Realtime Database rules are set to allow read/write.')
+                    ]));
+                }
+
+                return h('div', {
+                    className: 'min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-4 md:p-8'
+                }, h('div', { className: 'max-w-4xl mx-auto' }, [
+                    h('div', { key: 'header', className: 'text-center mb-8' }, [
+                        h('h1', { key: 'h1', className: 'text-3xl md:text-4xl font-bold text-orange-900 mb-2' }, '🦃 Friendsgiving Sign-Up'),
+                        h('p', { key: 'p1', className: 'text-orange-700' }, 'Claim a dish to bring to our feast!'),
+                        h('p', { key: 'p2', className: 'text-sm text-orange-600 mt-2' }, '✨ Updates automatically in real-time for everyone')
+                    ]),
+                    
+                    ...categories.map(category => {
+                        const categoryItems = groupedItems[category] || [];
+                        if (categoryItems.length === 0) return null;
+                        
+                        return h('div', { key: category, className: 'mb-6' }, [
+                            h('h2', { key: 'title', className: 'text-xl font-semibold text-orange-800 mb-3 border-b-2 border-orange-300 pb-1' }, category),
+                            h('div', { key: 'items', className: 'space-y-2' }, 
+                                categoryItems.map(item => 
+                                    h('div', { key: item.id, className: 'bg-white rounded-lg shadow p-3 md:p-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4' }, [
+                                        h('div', { key: 'name', className: 'flex-1 font-medium text-gray-800' }, item.item),
+                                        h('input', {
+                                            key: 'input',
+                                            type: 'text',
+                                            placeholder: 'Your name',
+                                            value: item.claimedBy,
+                                            onChange: (e) => handleClaimChange(item.id, e.target.value),
+                                            className: 'flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+                                        }),
+                                        h('button', {
+                                            key: 'delete',
+                                            onClick: () => handleDeleteItem(item.id),
+                                            className: 'text-red-500 hover:text-red-700 p-2 self-center',
+                                            title: 'Delete item'
+                                        }, '🗑️')
+                                    ])
+                                )
+                            )
+                        ]);
+                    }).filter(Boolean),
+                    
+                    h('div', { key: 'add-section', className: 'bg-white rounded-lg shadow p-4 md:p-6 mt-8' }, [
+                        h('h3', { key: 'title', className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Add New Item'),
+                        h('div', { key: 'form', className: 'flex flex-col md:flex-row gap-3' }, [
+                            h('select', {
+                                key: 'select',
+                                value: newItem.category,
+                                onChange: (e) => setNewItem({ ...newItem, category: e.target.value }),
+                                className: 'px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+                            }, categories.map(cat => h('option', { key: cat, value: cat }, cat))),
+                            h('input', {
+                                key: 'input',
+                                type: 'text',
+                                placeholder: 'Item name',
+                                value: newItem.item,
+                                onChange: (e) => setNewItem({ ...newItem, item: e.target.value }),
+                                onKeyPress: (e) => e.key === 'Enter' && handleAddItem(),
+                                className: 'flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500'
+                            }),
+                            h('button', {
+                                key: 'button',
+                                onClick: handleAddItem,
+                                className: 'bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition'
+                            }, '➕ Add')
+                        ])
+                    ])
+                ]));
+            }
+
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(h(FriendsgivingSignup));
+        })();
+    </script>
 </body>
 </html>
